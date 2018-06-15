@@ -16,33 +16,6 @@ namespace Salmon
     {
         static void Main(string[] args)
         {
-            // test
-
-            //コマンドライン引数を解析する
-            //ParserResult<Options> result = CommandLine.Parser.Default.ParseArguments<Options>(() => new Options(), args);
-            //ParserResult<GenOptions> result = CommandLine.Parser.Default.ParseArguments<GenOptions>(args);
-            //if (result.Tag == ParserResultType.Parsed)
-            //{
-            //    GenOptions opts = ((CommandLine.Parsed<GenOptions>)result).Value;
-            //    //解析に成功した時は、解析結果を表示
-            //    Console.WriteLine("OutputFile: {0}", opts.OutputFile);
-            //    Console.WriteLine("Overwrite: {0}", opts.Overwrite);
-
-            //    foreach(var s in opts.InputFiles)
-            //    {
-            //        Console.WriteLine("InputFiles: {0}", s);
-            //    }
-
-            //    Array.ForEach(opts.InputFiles.ToArray(), s => Console.WriteLine("InputFiles: {0}", s));
-
-
-            //}
-            //else
-            //{
-            //    //解析に失敗
-            //    Console.WriteLine("コマンドライン引数の解析に失敗");
-            //}
-
             CommandLine.Parser.Default.ParseArguments<GenOptions, StGenOptions, ImpOptions, SepOptions>(args)
                 .MapResult(
                     (GenOptions opts) => RunGen(opts),
@@ -53,7 +26,6 @@ namespace Salmon
                 );
 
             Console.ReadLine();
-
         }
 
         static int RunGen(GenOptions opts)
@@ -157,20 +129,6 @@ namespace Salmon
                         var records = csvReader.GetRecords<dynamic>();
                         foreach (ExpandoObject record in records)
                         {
-                            //// content to output
-                            //string outputContent = template;
-                            //// output filename
-                            //string outputfile = opts.OutputFile;
-                            //foreach (var kv in record.ToList())
-                            //{
-                            //    Console.WriteLine("{0}:{1}", kv.Key, kv.Value);
-                            //    string key = $"@@@{kv.Key}@@@";
-                            //    string value = kv.Value.ToString();
-                            //    outputContent = outputContent.Replace(key, value);
-                            //    outputfile = outputfile.Replace(key, value);
-                            //}
-                            //Console.WriteLine("{0}", outputContent);
-
                             // content to output
                             //string outputContent = template;
                             Template template = null;
@@ -461,7 +419,7 @@ namespace Salmon
 
             try
             {
-                //ファイルを読み込み
+                // read file
                 List<string> lines = new List<string>();
                 using (StreamReader sr = new StreamReader(
                        opts.InputFile, Encoding.GetEncoding("Shift_JIS")))
@@ -473,15 +431,10 @@ namespace Salmon
                     }
                 }
 
-                //foreach (string line in lines)
-                //{
-                //    Console.WriteLine(line);
-                //}
-
                 Dictionary<string, int> begins = new Dictionary<string, int>();
                 Dictionary<string, int> ends = new Dictionary<string, int>();
 
-                //開始マーク(begin パート名、パート名は[a-zA-Z0-9_-]+)の検出
+                //extract begin mark(begin part_name, part_name is [a-zA-Z0-9_-]+)
                 Regex beginRegex = new Regex(separator + @" +begin +([a-zA-Z0-9]+) +" + separator);
                 Regex endRegex   = new Regex(separator + @" +end +([a-zA-Z0-9_-]+) +" + separator);
 
@@ -498,7 +451,7 @@ namespace Salmon
                     lineat = lineat + 1;
                 }
 
-                //終了マーク(end パート名)の検出
+                //extract end mark
                 lineat = 0;
                 foreach (string line in lines)
                 {
@@ -515,7 +468,7 @@ namespace Salmon
                 Console.WriteLine("begins.Count:" + begins.Count);
                 Console.WriteLine("ends.Count:" + begins.Count);
 
-                //開始マークと終了マークがそろっていることを確認して
+                //check if begin mark meets end one
                 foreach (string key in begins.Keys)
                 {
                     if (ends.ContainsKey(key))
@@ -527,7 +480,7 @@ namespace Salmon
 
                         Console.WriteLine($"output {filename}");
 
-                        //パート名.txtで出力
+                        //output file
                         using (StreamWriter sw = new StreamWriter(
                             filename,
                             false,
@@ -664,21 +617,6 @@ namespace Salmon
         [CommandLine.Option('o', HelpText = "output file")]
         public string OutputFile { get; set; }
 
-        ////Boolean型のオプション
-        //[CommandLine.Option('v')]
-        //public bool Overwrite
-        //{
-        //    get;
-        //    set;
-        //}
-
-        ////オプション名がない値のリスト
-        //[CommandLine.Value(1)]
-        //public IEnumerable<string> InputFiles
-        //{
-        //    get;
-        //    set;
-        //}
     }
 
     /// <summary>
