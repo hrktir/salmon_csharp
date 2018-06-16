@@ -110,12 +110,22 @@ namespace Salmon
                 return -1;
             }
 
+            string inputFileEncoding = opts.InputFileEncoding ?? Encoding.Default.WebName;
+            string outputFileEncoding = opts.OutputFileEncoding ?? Encoding.Default.WebName;
+            string templateEncoding = opts.TemplateEncoding ?? Encoding.Default.WebName;
+
+            Console.WriteLine("inputFileEncoding: {0}", inputFileEncoding);
+            Console.WriteLine("outputFileEncoding: {0}", outputFileEncoding);
+            Console.WriteLine("templateEncoding: {0}", templateEncoding);
+
             try
             {
 
                 // read an input file
                 List<Dictionary<string, object>> records = null;
-                using (StreamReader stReader = new StreamReader(opts.InputFile, Encoding.GetEncoding("Shift_JIS")))
+                using (StreamReader stReader = new StreamReader(
+                    opts.InputFile, 
+                    Encoding.GetEncoding(inputFileEncoding)))
                 {
                     using (CsvReader csvReader = new CsvReader(stReader))
                     {
@@ -136,7 +146,9 @@ namespace Salmon
 
                 // read a template file
                 string templateStr = "";
-                using (StreamReader stReader = new StreamReader(opts.Template, Encoding.GetEncoding("Shift_JIS")))
+                using (StreamReader stReader = new StreamReader(
+                    opts.Template,
+                    Encoding.GetEncoding(templateEncoding)))
                 {
                     templateStr = stReader.ReadToEnd();
                 }
@@ -181,7 +193,10 @@ namespace Salmon
 
                     string outputfile = opts.OutputFile;
 
-                    using (StreamWriter writer = new StreamWriter(outputfile, false, Encoding.GetEncoding("Shift_JIS")))
+                    using (StreamWriter writer = new StreamWriter(
+                        outputfile,
+                        false,
+                        Encoding.GetEncoding(outputFileEncoding)))
                     {
                         writer.Write(template.Render());
                     }
@@ -208,7 +223,10 @@ namespace Salmon
 
                         string outputfile = tempOutputFile.Render();
 
-                        using (StreamWriter writer = new StreamWriter(outputfile, false, Encoding.GetEncoding("Shift_JIS")))
+                        using (StreamWriter writer = new StreamWriter(
+                            outputfile,
+                            false,
+                            Encoding.GetEncoding(outputFileEncoding)))
                         {
                             writer.Write(template.Render());
                         }
@@ -606,8 +624,21 @@ namespace Salmon
         [CommandLine.Option('i')]
         public string InputFile { get; set; }
 
+        [CommandLine.Option(HelpText ="text encoding of input file")]
+        public string InputFileEncoding { get; set; }
+
+        [CommandLine.Option('o')]
+        public string OutputFile { get; set; }
+
+        [CommandLine.Option(HelpText = "text encoding of output file")]
+        public string OutputFileEncoding { get; set; }
+
         [CommandLine.Option('t')]
         public string Template { get; set; }
+
+        [CommandLine.Option(HelpText = "text encoding of template")]
+        public string TemplateEncoding { get; set; }
+
 
         [CommandLine.Option('g', HelpText = "Assume the template as a template group and get an instance of template from the group.")]
         public string GetInstanceOf { get; set; }
@@ -621,9 +652,6 @@ namespace Salmon
         [CommandLine.Option('a', HelpText = "reference all records with specified attribute.")]
         public string AllRecordsAs { get; set; }
 
-
-        [CommandLine.Option('o')]
-        public string OutputFile { get; set; }
     }
 
     /// <summary>
