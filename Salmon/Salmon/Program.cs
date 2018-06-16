@@ -25,7 +25,7 @@ namespace Salmon
                     errs => 1
                 );
 
-            Console.ReadLine();
+            //Console.ReadLine();
         }
 
         static int RunGen(GenOptions opts)
@@ -113,82 +113,107 @@ namespace Salmon
             try
             {
 
-                // Read the template file
+                // read an input file
+                List<Dictionary<string, object>> records = null;
+                using (StreamReader stReader = new StreamReader(opts.InputFile, Encoding.GetEncoding("Shift_JIS")))
+                {
+                    using (CsvReader csvReader = new CsvReader(stReader))
+                    {
+                        // convert IEnumerable<dynamic> to List<Dictionary<string, object>>
+                        records = csvReader.GetRecords<dynamic>()
+                            .Select(
+                                x => ((ExpandoObject)x)
+                                .ToDictionary(xx => xx.Key, xx => xx.Value))
+                            .ToList();
+                    }
+                }
+
+                if (records == null)
+                {
+                    Console.WriteLine("Error. failed to read an input file.");
+                    return -1;
+                }
+
+                // read a template file
                 string templateStr = "";
                 using (StreamReader stReader = new StreamReader(opts.Template, Encoding.GetEncoding("Shift_JIS")))
                 {
                     templateStr = stReader.ReadToEnd();
                 }
 
+                // create template object
+                Template template = null;
+                TemplateGroup tg = null;
 
-                using (StreamReader stReader = new StreamReader(opts.InputFile, Encoding.GetEncoding("Shift_JIS")))
+                if (!string.IsNullOrEmpty(opts.GetInstanceOf))
                 {
-                    using (CsvReader csvReader = new CsvReader(stReader))
+                    // template group
+                    if (!string.IsNullOrEmpty(opts.DelimiterStartChar)
+                        && !string.IsNullOrEmpty(opts.DelimiterStopChar))
                     {
+                        tg = new TemplateGroupString(
+                            "[string]",
+                            templateStr,
+                            opts.DelimiterStartChar[0],
+                            opts.DelimiterStopChar[0]);
+                    }
+                    else
+                    {
+                        tg = new TemplateGroupString(templateStr);
+                    }
 
-                        var records = csvReader.GetRecords<dynamic>();
-                        foreach (ExpandoObject record in records)
+                    template = tg.GetInstanceOf(opts.GetInstanceOf);
+
+                }
+                else
+                {
+                    // template
+                    template = new Template(templateStr);
+                }
+
+
+                // output file(s)
+                if (opts.AllRecordsAs != null)
+                {
+                    // if option AllRecordsAs is specified, it outputs only one file.
+
+                    template.Add(opts.AllRecordsAs, records);
+
+                    string outputfile = opts.OutputFile;
+
+                    using (StreamWriter writer = new StreamWriter(outputfile, false, Encoding.GetEncoding("Shift_JIS")))
+                    {
+                        writer.Write(template.Render());
+                    }
+                }
+                else
+                {
+                    // if option AllRecordsAs is note specified, it outputs each files par record.
+
+                    foreach (Dictionary<string, object> record in records)
+                    {
+                        Template tempOutputFile = new Template(opts.OutputFile);
+
+                        foreach (var kv in record.ToList())
                         {
-                            // content to output
-                            //string outputContent = template;
-                            Template template = null;
-                            TemplateGroup tg = null;
+                            Console.WriteLine("{0}:{1}", kv.Key, kv.Value);
+                            string key = $"{kv.Key}";
+                            object value = kv.Value;
+                            template.Add(key, value);
+                            tempOutputFile.Add(key, value);
+                        }
 
-                            if (!string.IsNullOrEmpty(opts.GetInstanceOf))
-                            {
-                                // template group
-                                if (!string.IsNullOrEmpty(opts.DelimiterStartChar)
-                                    && !string.IsNullOrEmpty(opts.DelimiterStopChar))
-                                {
-                                    tg = new TemplateGroupString(
-                                        "[string]",
-                                        templateStr,
-                                        opts.DelimiterStartChar[0],
-                                        opts.DelimiterStopChar[0]);
-                                }
-                                else
-                                {
-                                    tg = new TemplateGroupString(templateStr);
-                                }
+                        Console.WriteLine($"content:{template.Render()}");
+                        Console.WriteLine($"outputFile:{tempOutputFile.Render()}");
 
-                                template = tg.GetInstanceOf(opts.GetInstanceOf);
+                        string outputfile = tempOutputFile.Render();
 
-                            }
-                            else
-                            {
-                                // template
-                                template = new Template(templateStr);
-                            }
-
-
-                            Template tempOutputFile = new Template(opts.OutputFile);
-
-                            
-                            foreach (var kv in record.ToList())
-                            {
-                                Console.WriteLine("{0}:{1}", kv.Key, kv.Value);
-                                string key = $"{kv.Key}";
-                                object value = kv.Value;
-                                template.Add(key, value);
-                                tempOutputFile.Add(key, value);  
-                                //outputfile = outputfile.Replace(key, value.ToString());
-                            }
-                            Console.WriteLine($"content:{template.Render()}");
-                            Console.WriteLine($"outputFile:{tempOutputFile.Render()}");
-
-                            // output filename
-                            string outputfile = tempOutputFile.Render();
-
-                            // Write an output
-
-                            using (StreamWriter writer = new StreamWriter(outputfile, false, Encoding.GetEncoding("Shift_JIS")))
-                            {
-                                writer.Write(template.Render());
-                            }
+                        using (StreamWriter writer = new StreamWriter(outputfile, false, Encoding.GetEncoding("Shift_JIS")))
+                        {
+                            writer.Write(template.Render());
                         }
                     }
                 }
-
             }
             catch (Exception e)
             {
@@ -554,6 +579,8 @@ namespace Salmon
         public bool Verbose { get; set; }
     }
 
+
+
     /// <summary>
     /// Options for the generator
     /// </summary>
@@ -591,8 +618,8 @@ namespace Salmon
         [CommandLine.Option('e')]
         public string DelimiterStopChar { get; set; }
 
-        [CommandLine.Option('a', HelpText = "put all records into a template at once")]
-        public bool AllRecords { get; set; }
+        [CommandLine.Option('a', HelpText = "reference all records with specified attribute.")]
+        public string AllRecordsAs { get; set; }
 
 
         [CommandLine.Option('o')]
