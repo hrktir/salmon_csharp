@@ -1,12 +1,4 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-END
-Attribute VB_Name = "Sheet1"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = True
-Attribute VB_Exposed = True
+Attribute VB_Name = "Module1"
 ' Copyright 2018 hrktir
 '
 ' Redistribution and use in source and binary forms, with or without modification,
@@ -34,28 +26,32 @@ Attribute VB_Exposed = True
 ' OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 ' OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Sub OutputCSV()
+Public Sub OutputCSV()
   
   Dim idx As Long
   Dim lists As String
-  Dim shtname As String
+  Dim filename As String
   Dim overwriteOk As Boolean
   
   ' Don't display alert when to output
-  overwriteOk = Not CheckBox1.Value
+  overwriteOk = Not ActiveSheet.CheckBox1.Value
   
   Application.DisplayAlerts = overwriteOk
   
   For idx = 1 To Sheets.Count
     If Sheets(idx).Name <> "_TOP" Then
-      shtname = Sheets(idx).Name & ".csv"
+      ' filename
+      filename = Sheets(idx).Name & ".csv"
       
-      lists = lists & shtname & vbCrLf
+      lists = lists & filename & vbCrLf
+      
+      ' add path to filename that is a folder that this file is located
+      filename = ActiveWorkbook.Path & "\" & filename
       
       Sheets(idx).Select
       Sheets(idx).Copy
       
-      ActiveWorkbook.SaveAs Filename:=shtname, FileFormat:=xlCSV, CreateBackup:=False
+      ActiveWorkbook.SaveAs filename:=filename, FileFormat:=xlCSV, CreateBackup:=False
       ActiveWindow.Close
       
     End If
@@ -69,6 +65,5 @@ End Sub
 
 
 
-Private Sub CommandButton1_Click()
-  Call OutputCSV
-End Sub
+
+
