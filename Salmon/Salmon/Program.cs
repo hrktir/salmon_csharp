@@ -164,6 +164,13 @@ namespace Salmon
                                 x => ((ExpandoObject)x)
                                 .ToDictionary(xx => xx.Key, xx => xx.Value))
                             .ToList();
+
+                        // remove elements of dictionary if element's value is "".
+                        records = records.Select(
+                            x => x.Where(xx => xx.Value != null && xx.Value.ToString() != "")
+                                  .ToDictionary(xx => xx.Key, xx => xx.Value)
+                                  ).ToList();
+
                     }
                 }
 
