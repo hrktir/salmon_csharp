@@ -245,13 +245,22 @@ namespace Salmon
                     {
                         Template tempOutputFile = new Template(opts.OutputFile);
 
-                        foreach (var kv in record.ToList())
+                        if (opts.RecordAs != null)
                         {
-                            Console.WriteLine("{0}:{1}", kv.Key, kv.Value);
-                            string key = $"{kv.Key}";
-                            object value = kv.Value;
-                            template.Add(key, value);
-                            tempOutputFile.Add(key, value);
+                            Console.WriteLine("{0}:{1}", opts.RecordAs, record);
+                            template.Add(opts.RecordAs, record);
+                            tempOutputFile.Add(opts.RecordAs, record);
+                        }
+                        else
+                        {
+                            foreach (var kv in record.ToList())
+                            {
+                                Console.WriteLine("{0}:{1}", kv.Key, kv.Value);
+                                string key = $"{kv.Key}";
+                                object value = kv.Value;
+                                template.Add(key, value);
+                                tempOutputFile.Add(key, value);
+                            }
                         }
 
                         Console.WriteLine($"content:{template.Render()}");
@@ -685,8 +694,11 @@ namespace Salmon
         [CommandLine.Option('e')]
         public string DelimiterStopChar { get; set; }
 
-        [CommandLine.Option('a', HelpText = "reference all records with specified attribute.")]
+        [CommandLine.Option('a', HelpText = "reference all records with a specified attribute.")]
         public string AllRecordsAs { get; set; }
+
+        [CommandLine.Option('r', HelpText = "reference a record with a specified attribute.")]
+        public string RecordAs { get; set; }
 
     }
 
