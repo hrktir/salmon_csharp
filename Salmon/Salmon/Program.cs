@@ -711,10 +711,10 @@ namespace Salmon
         [CommandLine.Option('t', HelpText = "template")]
         public string Template { get; set; }
 
-        [CommandLine.Option('r', HelpText = "snippet's root dir")]
+        [CommandLine.Option('r', HelpText = "snippet's root dir. default is \".\"")]
         public string SnippetRoot { get; set; }
 
-        [CommandLine.Option('s', HelpText = "separator")]
+        [CommandLine.Option('s', HelpText = "separator. default is \"###\"")]
         public string Separator { get; set; }
 
         [CommandLine.Option('o', HelpText = "output file")]
